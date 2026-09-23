@@ -1,0 +1,75 @@
+name: nexus
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: nexus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nexus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-nexus}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
+    volumes:
+      - nexus_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexus} -d ${POSTGRES_DB:-nexus}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: nexus-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_HOST_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nexus-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD:-nexus_dev_password}@postgres:5432/${POSTGRES_DB:-nexus}
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # Vite bakes VITE_* variables in at build time, not container runtime,
+      # so this must be passed as a build arg rather than `environment:`.
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    container_name: nexus-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  nexus_postgres_data:

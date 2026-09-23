@@ -1,0 +1,41 @@
+# --- Python / backend ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# --- Node / frontend ---
+node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Docker ---
+*.pid
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+
+# --- Data (synthetic outputs, not committed unless explicitly seeded) ---
+data/simulator/generated/
+evaluation/reports/*.json
+!evaluation/reports/.gitkeep
+
+# --- Logs ---
+*.log
