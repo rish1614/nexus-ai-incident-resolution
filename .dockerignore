@@ -1,0 +1,13 @@
+# Keep the Docker build context small and fast now that backend's build
+# context is the repo root (see docker-compose.yml / backend/Dockerfile).
+.git/
+frontend/node_modules/
+frontend/dist/
+backend/.venv/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.mypy_cache/
+**/__pycache__/
+**/*.pyc
+*.md
+.env

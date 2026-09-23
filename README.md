@@ -86,8 +86,20 @@ running backend/frontend without containers.
 git clone <this-repo>
 cd nexus
 cp .env.example .env
-make up
-# or: docker compose up --build
+make up-d
+```
+
+`make up-d` starts the stack **detached** (keeps your terminal free for
+the next commands). If you use plain `make up` instead, it runs attached —
+pressing Ctrl+C there stops the entire stack, which is easy to trip over.
+
+Once the containers are healthy, initialize the database (`migrate`/`seed`
+run *inside* the backend container, which already has all Python deps
+installed — no local Python setup needed on your machine):
+
+```bash
+make migrate   # applies backend/alembic/versions/0001_initial_schema.py
+make seed      # inserts synthetic services, users, and a linked incident
 ```
 
 - Backend: http://localhost:8000 (docs at `/docs`)
@@ -95,12 +107,14 @@ make up
 - Postgres: localhost:5433 (container-internal port stays 5432; host mapping is offset to avoid clashing with a locally-installed Postgres — override via `POSTGRES_HOST_PORT` in `.env` if needed)
 - Redis: localhost:6380 (same reasoning; override via `REDIS_HOST_PORT`)
 
-> **Verified:** this flow was run end-to-end on a real machine (Docker
-> build for both `nexus-backend` and `nexus-frontend` completed
-> successfully). If `docker compose up` fails with "port is already
-> allocated," another process on your machine is already using that port —
-> either stop it or change `POSTGRES_HOST_PORT` / `REDIS_HOST_PORT` in
-> `.env`.
+> **Verified:** `make up` was run end-to-end on a real machine — all 4
+> containers built and reported healthy, `/ready` returned `200` against
+> live Postgres+Redis. `make migrate` / `make seed` are written and
+> reviewed (the migration's SQL was verified via Alembic's offline `--sql`
+> render) but not yet run against a live database — see
+> `IMPLEMENTATION_STATUS.md`. If `docker compose up` fails with "port is
+> already allocated," another process is using that port — stop it or
+> change `POSTGRES_HOST_PORT` / `REDIS_HOST_PORT` in `.env`.
 
 ### Option B — Run backend/frontend directly (verified in development)
 
@@ -157,11 +171,14 @@ model and security review land in Phase 7 / `docs/security.md` and
 
 ## Limitations (current)
 
-- Only Phase 1 (repository bootstrap) is implemented. There are no agents,
-  no RAG pipeline, no database models, and no incident workflow yet.
-- Docker builds and Docker Compose orchestration are written but not yet
-  verified end-to-end — see `IMPLEMENTATION_STATUS.md` for exactly what
-  has and hasn't been run.
+- Phases 1–2 are implemented (repository bootstrap; database models,
+  migrations, and seed data). There are no agents, no RAG pipeline, and no
+  incident workflow yet — those start at Phase 3.
+- The Alembic migration's SQL was verified via Alembic's offline `--sql`
+  render (confirms valid Postgres DDL) but has not yet been applied
+  (`alembic upgrade head`) against a live Postgres+pgvector instance. Run
+  `make migrate && make seed` after `make up` and confirm — see
+  `IMPLEMENTATION_STATUS.md` for exactly what's verified.
 
 ## Roadmap
 

@@ -32,7 +32,7 @@ components are implemented.
 |---|---|---|
 | 0 | Product & architecture docs | Pending |
 | 1 | Repository bootstrap (this phase) | **Complete** |
-| 2 | Database models, migrations, pgvector, seed data | Not started |
+| 2 | Database models, migrations, pgvector, seed data | Implemented — offline-verified, live-DB run pending |
 | 3 | Knowledge ingestion + RAG pipeline | Not started |
 | 4 | Incident simulator | Not started |
 | 5 | Core agents (triage, log, RAG, RCA, remediation, risk, validation, reporter) | Not started |

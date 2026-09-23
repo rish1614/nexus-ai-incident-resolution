@@ -33,8 +33,11 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      # Context is the repo root (not ./backend) so the image can also
+      # include the top-level scripts/ directory — see backend/Dockerfile
+      # for why.
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: nexus-backend
     restart: unless-stopped
     env_file:
